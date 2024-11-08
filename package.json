@@ -1,0 +1,14 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "front dev": "vite",
+        "build": "vite build",
+        "dev": "php artisan serve"
+    },
+    "devDependencies": {
+        "axios": "^1.6.4",
+        "laravel-vite-plugin": "^1.0.0",
+        "vite": "^5.0.0"
+    }
+}
