@@ -10,4 +10,9 @@ class Post extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    public $fillable = array(
+        "post_title", "post_slug", "post_description",
+        "post_content", "post_coordinates", "post_type",
+        "post_author", "updated_by", "deleted_by", "deleted_at"
+    );
 }

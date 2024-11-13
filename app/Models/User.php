@@ -17,11 +17,11 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $fillable = array(
+        "user_login", "user_display_name", "user_email",
+        "user_phone_number", "user_phone_ext", "user_lastname",
+        "user_firstname", "user_birthday", "user_gender"
+    );
 
     /**
      * The attributes that should be hidden for serialization.
@@ -29,7 +29,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $hidden = [
-        'password',
+        'user_password',
         'remember_token',
     ];
 
@@ -40,6 +40,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'user_password' => 'hashed',
     ];
 }
