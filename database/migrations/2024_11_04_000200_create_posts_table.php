@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('post_description')->nullable();
             $table->longText('post_content')->nullable();
             $table->string('post_coordinates')->nullable();
-            $table->enum('post_type', ["post", "attachment", "comment"]);
+            $table->enum('post_type', ["post", "attachment", "comment", "profile"]);
             $table->foreignId('post_author');
             $table->foreignId('post_parent')->nullable();
             $table->foreignId('updated_by')->nullable();

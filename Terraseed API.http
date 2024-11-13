@@ -1,0 +1,16 @@
+#   Terraseed API
+
+###
+# group: Posts
+# @name GET /api/posts
+GET {{base_url}}/api/posts
+
+###
+# group: Posts
+# @name GET /api/posts/{id}
+GET {{base_url}}/api/posts/{{ID}}
+
+###
+# group: Posts
+# @name POST /api/posts
+POST {{base_url}}/api/posts/
