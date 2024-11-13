@@ -4,57 +4,50 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
-
-class BaseResource extends JsonResource
+class BaseCollection extends ResourceCollection
 {
     private int $code;
     private string|null $message = null;
     private bool $success;
 
-    public function error(): array {
-        return array(
-            "data"=> [],
-            "success"=> false,
-            "code"=> 400,
-            "message"=> "Bad request"
-        );
-    }
-
     /**
-     * Transform the resource into an array.
+     * Transform the resource collection into an array.
      *
-     * @return array<string, mixed>
+     * @return array<int|string, mixed>
      */
     public function toArray(Request $request): array {
         // Make an unique structure for API responses
-        return array(
-            "data"=> $this->resource, // Data retrieved by the request
-            "success"=> $this->getSuccess(), // Include status of the request response
-            "code"=> $this->getCode(), // Define the response
-            "message"=> $this->getMessage()
-        );
+        return $this->resource->toArray();
     }
 
     // Define the response status according to status code
-    public function withResponse(Request $request, JsonResponse $response)
+    public function withResponse(Request $request, JsonResponse $response) :void
     {
         $response->setStatusCode($this->getCode());
     }
 
+    public function with(Request $request) :array {
+        return array(
+            "success"=> $this->getSuccess(),
+            "code"=> $this->getCode(),
+            "message"=> $this->getMessage()
+        );
+    }
+
 
     // Set the response status to success
-    public function success() {
+    public function success(): BaseCollection {
         $this->success = true;
         return $this;
     }
 
-    public function setCode($code): BaseResource {
+    public function setCode($code): BaseCollection {
         $this->code = $code;
         return $this;
     }
-    public function setMessage($message): BaseResource {
+    public function setMessage($message): BaseCollection {
         $this->message = $message;
         return $this;
     }

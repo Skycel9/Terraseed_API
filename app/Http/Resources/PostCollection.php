@@ -5,13 +5,9 @@ namespace App\Http\Resources;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 
-class PostCollection extends ResourceCollection
+class PostCollection extends BaseCollection
 {
-    public string $message;
-    public int $code;
-
     /**
      * Transform the resource collection into an array.
      *
@@ -30,4 +26,10 @@ class PostCollection extends ResourceCollection
             ]
         );
     }
+
+    /*public function with(Request $request): array {
+        return array(
+            "success"=> $this->getSuccess()
+        );
+    }*/
 }
