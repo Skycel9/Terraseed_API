@@ -67,6 +67,73 @@ class PostController extends Controller
             ->setMessage("Post created successfully");
     }
 
+    public function update(Request $request, $id) {
+
+        $validator = Validator::make($request->all(), [
+            "post_title"=> "string|nullable",
+            "post_description"=> "string|nullable",
+            "post_content"=> "string|nullable",
+        ]);
+
+        if ($validator->fails()) {
+            return BaseResource::error()
+                ->setCode(400)
+                ->setMessage("Data validation failed")
+                ->setErrors($validator->errors());
+        }
+
+        $post = Post::findOrFail($id);
+        $old_post = Post::findOrFail($id);
+
+        $fieldsToUpdate = [
+            'post_title' => 'post_title',
+            'post_description' => 'post_description',
+            'post_content' => 'post_content'
+        ];
+
+        $updated = false;
+        foreach ($fieldsToUpdate as $field => $requestField) {
+            if ($post->{$field} != $request->get($requestField)) {
+                $updated = true;
+                $post->{$field} = $request->get($requestField);
+
+                // Generate a new slug only if title is update
+                if ($field === 'post_title') {
+                    $post->post_slug = $this->strToUrl($post->post_title);
+                }
+            }
+        }
+
+        if ($updated) {
+            $post->save();
+
+            return (new PostCollection(["old"=> $old_post, "new"=> $post]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("Post updated successfully");
+        } else {
+            return BaseResource::error()
+                ->setCode(200)
+                ->setMessage("Any changes made")
+                ->setErrors(json_encode(["not_modified"=> "The post is already up to date"]));
+        }
+    }
+
+    public function destroy($id) {
+
+        $post = Post::findOrFail($id);
+
+        $post->delete();
+
+        return BaseResource::error()
+            ->success()
+            ->setCode(200)
+            ->setMessage("Post deleted successfully")
+            ->setErrors(json_encode(["deleted"=> $post->post_title]));
+    }
+
+
+
     public function strToUrl(string $str): string {
 
         // Replace special chars with ASCII equivalent if exists
