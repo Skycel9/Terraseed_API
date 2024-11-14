@@ -16,4 +16,9 @@ class Topic extends Model
         "topic_icon", "topic_author", "updated_by", 
         "deleted_by", "deleted_at"
     );
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }

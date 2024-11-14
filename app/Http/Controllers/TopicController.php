@@ -9,7 +9,8 @@ use Illuminate\Http\Request;
 
 class TopicController extends Controller
 {
-    public function index($id = null) {
+    public function index($id = null)
+    {
         $topics = Topic::all();
         $collection = new TopicCollection($topics);
 
@@ -18,7 +19,8 @@ class TopicController extends Controller
             ->setCode(200)
             ->setMessage("Topic list loaded successfully");
     }
-    public function show($id) {
+    public function show($id)
+    {
         $topic = Topic::findOrFail($id);
         $resource = new TopicResource($topic);
 

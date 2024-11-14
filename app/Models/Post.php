@@ -15,4 +15,9 @@ class Post extends Model
         "post_content", "post_coordinates", "post_type",
         "post_author", "updated_by", "deleted_by", "deleted_at"
     );
+
+    public function topic()
+    {
+        return $this->belongsTo(Topic::class);
+    }
 }

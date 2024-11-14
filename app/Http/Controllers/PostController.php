@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Post;
 use App\Http\Resources\PostCollection;
 use App\Http\Resources\PostResource;
+use App\Models\Topic;
 use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
@@ -134,7 +135,17 @@ class PostController extends Controller
             ->setErrors(json_encode(["deleted"=> $post->post_title]));
     }
 
-
+    public function getPostsByTopic($id)
+    {
+        // Récupère le topic avec les posts associés
+        $topic = Topic::with('posts')->find($id);
+    
+        if (!$topic) {
+            return response()->json(['message' => 'Topic not found'], 404);
+        }
+    
+        return response()->json($topic->posts);
+    }
 
     public function strToUrl(string $str): string {
 

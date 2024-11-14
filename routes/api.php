@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TopicController;
-use App\Models\Topic;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +19,8 @@ use App\Models\Topic;
 Route::apiResource("posts", PostController::class)->withTrashed();
 
 Route::apiResource("topics", TopicController::class)->withTrashed();
+
+Route::get('topics/{id}/posts', [PostController::class, 'getPostsByTopic']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
