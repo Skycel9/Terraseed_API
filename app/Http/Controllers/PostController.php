@@ -32,33 +32,35 @@ class PostController extends Controller
 
     public function store(Request $request) {
 
-        if ($request->header("x-post-type")) {
-            $validator = Validator::make($request->all(), [
-                "post_title"=> "required|string",
-                "post_description"=> "required|string",
-                "post_content"=> "required|string",
-                "post_coordinates.lat"=> "decimal:1,10|nullable",
-                "post_coordinates.long"=> "decimal:1,10|nullable",
-                "post_author"=> "required|integer",
-                "post_parent"=> "integer|nullable",
-            ]);
+        $validator = Validator::make($request->all(), [
+            "post_title"=> "required|string",
+            "post_description"=> "required|string",
+            "post_content"=> "required|string",
+            "post_coordinates_lat"=> "decimal:1,10|nullable",
+            "post_coordinates_long"=> "decimal:1,10|nullable",
+            "post_author"=> "required|integer",
+            "post_parent"=> "integer|nullable"
+        ]);
 
-            if($validator->fails()); {
-                return (new BaseResource)->error();
-            }
-
-            $data = array(
-                "post_title"=> $request->get("post_title"),
-                "post_slug"=> $this->strToUrl($request->get("post_title")),
-                "post_description"=> $request->get("post_description"),
-                "post_content"=> $request->get("post_content"),
-                "post_coordinates"=> serialize(array("lat"=> $request->get("post_coordinates.lat"), "long"=> $request->get("post_coordinates.long"))),
-                "post_type"=> $request->header("x-post-type"),
-            );
+        if($validator->fails()) {
+            return BaseResource::error()
+                ->setCode(400)
+                ->setMessage("Data validation failed")
+                ->setErrors($validator->errors());
         }
-        die;
-        // TODO : Continue request
-        $post = Post::create($request->all());
+
+        $data = array(
+            "post_title"=> $request->get("post_title"),
+            "post_slug"=> $this->strToUrl($request->get("post_title")),
+            "post_description"=> $request->get("post_description"),
+            "post_content"=> $request->get("post_content"),
+            "post_coordinates"=> serialize(array("lat"=> $request->get("post_coordinates_lat"), "long"=> $request->get("post_coordinates_long"))),
+            "post_type"=> "post",
+            "post_author"=> $request->get("post_author"),
+            "post_parent"=> $request->get("post_parent")
+        );
+
+        $post = Post::create($data);
         $resource = new PostResource($post);
 
         return $resource
@@ -66,6 +68,73 @@ class PostController extends Controller
             ->setCode(201)
             ->setMessage("Post created successfully");
     }
+
+    public function update(Request $request, $id) {
+
+        $validator = Validator::make($request->all(), [
+            "post_title"=> "string|nullable",
+            "post_description"=> "string|nullable",
+            "post_content"=> "string|nullable",
+        ]);
+
+        if ($validator->fails()) {
+            return BaseResource::error()
+                ->setCode(400)
+                ->setMessage("Data validation failed")
+                ->setErrors($validator->errors());
+        }
+
+        $post = Post::findOrFail($id);
+        $old_post = Post::findOrFail($id);
+
+        $fieldsToUpdate = [
+            'post_title' => 'post_title',
+            'post_description' => 'post_description',
+            'post_content' => 'post_content'
+        ];
+
+        $updated = false;
+        foreach ($fieldsToUpdate as $field => $requestField) {
+            if ($post->{$field} != $request->get($requestField)) {
+                $updated = true;
+                $post->{$field} = $request->get($requestField);
+
+                // Generate a new slug only if title is update
+                if ($field === 'post_title') {
+                    $post->post_slug = $this->strToUrl($post->post_title);
+                }
+            }
+        }
+
+        if ($updated) {
+            $post->save();
+
+            return (new PostCollection(["old"=> $old_post, "new"=> $post]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("Post updated successfully");
+        } else {
+            return BaseResource::error()
+                ->setCode(200)
+                ->setMessage("Any changes made")
+                ->setErrors(json_encode(["not_modified"=> "The post is already up to date"]));
+        }
+    }
+
+    public function destroy($id) {
+
+        $post = Post::findOrFail($id);
+
+        $post->delete();
+
+        return BaseResource::error()
+            ->success()
+            ->setCode(200)
+            ->setMessage("Post deleted successfully")
+            ->setErrors(json_encode(["deleted"=> $post->post_title]));
+    }
+
+
 
     public function strToUrl(string $str): string {
 
