@@ -11,15 +11,11 @@ class BaseResource extends JsonResource
 {
     private int $code;
     private string|null $message = null;
-    private bool $success;
+    private mixed $errors = null;
+    private bool $success = false;
 
-    public function error(): array {
-        return array(
-            "data"=> [],
-            "success"=> false,
-            "code"=> 400,
-            "message"=> "Bad request"
-        );
+    public static function error(): self {
+        return new static([]);
     }
 
     /**
@@ -29,33 +25,42 @@ class BaseResource extends JsonResource
      */
     public function toArray(Request $request): array {
         // Make an unique structure for API responses
-        return array(
-            "data"=> $this->resource, // Data retrieved by the request
+        return $this->resource; // Data retrieved by the request
+    }
+
+    // Define the response status according to status code
+    public function withResponse(Request $request, JsonResponse $response): void
+    {
+        $response->setStatusCode($this->getCode());
+    }
+    public function with(Request $request) {
+        $arr = array(
             "success"=> $this->getSuccess(), // Include status of the request response
             "code"=> $this->getCode(), // Define the response
             "message"=> $this->getMessage()
         );
-    }
 
-    // Define the response status according to status code
-    public function withResponse(Request $request, JsonResponse $response)
-    {
-        $response->setStatusCode($this->getCode());
+        if (!$this->getSuccess()) $arr["errors"] = $this->getErrors(); // Include any errors related to the request response
+        return $arr;
     }
 
 
-    // Set the response status to success
-    public function success() {
-        $this->success = true;
-        return $this;
-    }
 
-    public function setCode($code): BaseResource {
+    public function setCode($code): self {
         $this->code = $code;
         return $this;
     }
-    public function setMessage($message): BaseResource {
+    public function setMessage($message): self {
         $this->message = $message;
+        return $this;
+    }
+    public function setErrors($errors): self {
+        $this->errors = json_decode($errors);
+        return $this;
+    }
+    // Set the response status to success
+    public function success(): self {
+        $this->success = true;
         return $this;
     }
 
@@ -64,6 +69,9 @@ class BaseResource extends JsonResource
     }
     public function getMessage(): string|null {
         return $this->message;
+    }
+    public function getErrors(): mixed {
+        return $this->errors;
     }
     public function getSuccess(): bool {
         return $this->success;
