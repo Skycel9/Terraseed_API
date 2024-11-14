@@ -32,33 +32,35 @@ class PostController extends Controller
 
     public function store(Request $request) {
 
-        if ($request->header("x-post-type")) {
-            $validator = Validator::make($request->all(), [
-                "post_title"=> "required|string",
-                "post_description"=> "required|string",
-                "post_content"=> "required|string",
-                "post_coordinates.lat"=> "decimal:1,10|nullable",
-                "post_coordinates.long"=> "decimal:1,10|nullable",
-                "post_author"=> "required|integer",
-                "post_parent"=> "integer|nullable",
-            ]);
+        $validator = Validator::make($request->all(), [
+            "post_title"=> "required|string",
+            "post_description"=> "required|string",
+            "post_content"=> "required|string",
+            "post_coordinates_lat"=> "decimal:1,10|nullable",
+            "post_coordinates_long"=> "decimal:1,10|nullable",
+            "post_author"=> "required|integer",
+            "post_parent"=> "integer|nullable"
+        ]);
 
-            if($validator->fails()); {
-                return (new BaseResource)->error();
-            }
-
-            $data = array(
-                "post_title"=> $request->get("post_title"),
-                "post_slug"=> $this->strToUrl($request->get("post_title")),
-                "post_description"=> $request->get("post_description"),
-                "post_content"=> $request->get("post_content"),
-                "post_coordinates"=> serialize(array("lat"=> $request->get("post_coordinates.lat"), "long"=> $request->get("post_coordinates.long"))),
-                "post_type"=> $request->header("x-post-type"),
-            );
+        if($validator->fails()) {
+            return BaseResource::error()
+                ->setCode(400)
+                ->setMessage("Data validation failed")
+                ->setErrors($validator->errors());
         }
-        die;
-        // TODO : Continue request
-        $post = Post::create($request->all());
+
+        $data = array(
+            "post_title"=> $request->get("post_title"),
+            "post_slug"=> $this->strToUrl($request->get("post_title")),
+            "post_description"=> $request->get("post_description"),
+            "post_content"=> $request->get("post_content"),
+            "post_coordinates"=> serialize(array("lat"=> $request->get("post_coordinates_lat"), "long"=> $request->get("post_coordinates_long"))),
+            "post_type"=> "post",
+            "post_author"=> $request->get("post_author"),
+            "post_parent"=> $request->get("post_parent")
+        );
+
+        $post = Post::create($data);
         $resource = new PostResource($post);
 
         return $resource
