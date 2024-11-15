@@ -18,7 +18,7 @@ use App\Http\Controllers\CommentController;
 
 Route::apiResource("posts", PostController::class)->withTrashed();
 
-Route::apiResource("posts.comments", CommentController::class);
+Route::apiResource("posts.comments", CommentController::class)->except(["update"])->withTrashed()->shallow();
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
