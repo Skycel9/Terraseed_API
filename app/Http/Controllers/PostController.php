@@ -124,15 +124,19 @@ class PostController extends Controller
 
     public function destroy($id) {
 
-        $post = Post::findOrFail($id);
+        $post = Post::find($id);
+
+        if (!$post) return BaseResource::error()
+            ->setCode(404)
+            ->setMessage("Post not found")
+            ->setErrors(json_encode(["not_found"=> "The post you're trying to delete does not exist"]));
 
         $post->delete();
 
         return BaseResource::error()
             ->success()
             ->setCode(200)
-            ->setMessage("Post deleted successfully")
-            ->setErrors(json_encode(["deleted"=> $post->post_title]));
+            ->setMessage("Post (" . $id . ") `" . $post->post_title . "` deleted successfully");
     }
 
     public function getPostsByTopic($id)
