@@ -139,16 +139,17 @@ class PostController extends Controller
             ->setMessage("Post (" . $id . ") `" . $post->post_title . "` deleted successfully");
     }
 
-    public function getPostsByTopic($id)
+    public function getPostsByTopic($id): PostCollection
     {
-        // Récupère le topic avec les posts associés
-        $topic = Topic::with('posts')->find($id);
-    
-        if (!$topic) {
-            return response()->json(['message' => 'Topic not found'], 404);
-        }
-    
-        return response()->json($topic->posts);
+        $topic = Topic::findOrFail($id);
+
+        $posts = $topic->posts()->where('post_type', 'post')->get();
+
+
+        return (new PostCollection($posts))
+            ->success()
+            ->setCode(200)
+            ->setMessage("Posts for this topic retrieved successfully");
     }
 
     public function strToUrl(string $str): string {
