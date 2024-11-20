@@ -18,6 +18,9 @@ class Post extends Model
 
     public function topic()
     {
-        return $this->belongsTo(Topic::class);
+        return $this->belongsTo(Topic::class, "id");
+    }
+    public function author() {
+        return $this->belongsTo(User::class, 'post_author');
     }
 }

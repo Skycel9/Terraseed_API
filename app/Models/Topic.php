@@ -13,12 +13,12 @@ class Topic extends Model
 
     protected $fillable = array(
         "topic_title", "topic_slug", "topic_banner",
-        "topic_icon", "topic_author", "updated_by", 
-        "deleted_by", "deleted_at"
+        "topic_icon", "topic_author", "updated_by",
+        "deleted_by"
     );
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Post::class, "post_parent");
     }
 }
