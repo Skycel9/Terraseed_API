@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class PostResource extends BaseResource
 {
-
     /**
      * Transform the resource into an array.
      *
@@ -16,7 +15,8 @@ class PostResource extends BaseResource
     public function toArray(Request $request): array
     {
         $author = new UserResource(User::Find($this->post_author));
-        return [
+
+        $result = [
             "id"=> $this->id,
             "title"=> $this->post_title,
             "slug"=> $this->post_slug,
@@ -29,5 +29,7 @@ class PostResource extends BaseResource
             "created_at"=> $this->created_at,
             "updated_at"=> $this->updated_at,
         ];
+
+        return $this->applyExcludes($result);
     }
 }

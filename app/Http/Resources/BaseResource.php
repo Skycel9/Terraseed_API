@@ -14,6 +14,8 @@ class BaseResource extends JsonResource
     private mixed $errors = null;
     private bool $success = false;
 
+    private array $excludes = array();
+
     public static function error(): self {
         return new static([]);
     }
@@ -33,6 +35,7 @@ class BaseResource extends JsonResource
     {
         $response->setStatusCode($this->getCode());
     }
+
     public function with(Request $request) {
         $arr = array(
             "success"=> $this->getSuccess(), // Include status of the request response
@@ -44,6 +47,53 @@ class BaseResource extends JsonResource
         return $arr;
     }
 
+    /**
+     * Define fields to exclude dynamically.
+     *
+     * @param array $fields
+     * @return $this
+     */
+    public function except(array $fields = array()): static
+    {
+        $this->excludes = $fields;
+        return $this;
+    }
+
+    /**
+     * Exclude specified fields from data.
+     *
+     * @param array $data
+     * @return array
+     */
+    protected function applyExcludes(array $data): array
+    {
+        foreach ($this->excludes as $field) {
+            unset($data[$field]);
+        }
+        return $data;
+    }
+    /*public function except($fields): self {
+
+        $this->fields = $fields;
+
+        return $this;
+    }
+    public function only(array $fields): self {
+        $this->fields = $fields;
+        return $this;
+    }
+
+    public function clear($arr): array {
+
+
+        /*if (count($this->fields) > 0) {
+            foreach ($this->fields as $field) {
+                unset($arr[$field]);
+            }
+        }
+
+        return $arr;
+    }*/
 
 
     public function setCode($code): self {
