@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\TopicController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\AttachmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,8 @@ Route::apiResource("topics", TopicController::class)->withTrashed();
 Route::get('topics/{id}/posts', [PostController::class, 'getPostsByTopic']);
 
 Route::apiResource("posts.comments", CommentController::class)->except(["update"])->withTrashed()->shallow();
+
+Route::apiResource("attachments", AttachmentController::class)->withTrashed();
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
