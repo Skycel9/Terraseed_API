@@ -26,10 +26,4 @@ class PostCollection extends BaseCollection
             ]
         );
     }
-
-    /*public function with(Request $request): array {
-        return array(
-            "success"=> $this->getSuccess()
-        );
-    }*/
 }
