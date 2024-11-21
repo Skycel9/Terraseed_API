@@ -65,6 +65,7 @@ class TopicController extends Controller
     }
 
     public function update(Request $request, $id) {
+
         $validator = Validator::make($request->all(), [
             "topic_title"=> "string|nullable",
             "topic_slug"=> "string|nullable",
@@ -97,11 +98,11 @@ class TopicController extends Controller
 
                 // Generate a new slug only if title is update
                 if ($field === 'topic_title') {
-                    $topic->topic_slug = $this->strToUrl($topic->topic_title);
+                    $topic->topic_slug = strToUrl($topic->topic_title);
                 }
             }
         }
-        if ($topic->topic_slug == null) $topic->topic_slug = $this->strToUrl($topic->topic_title);
+        if ($topic->topic_slug == null) $topic->topic_slug = strToUrl($topic->topic_title);
 
         if ($updated) {
             $topic->save();
@@ -133,20 +134,5 @@ class TopicController extends Controller
             ->success()
             ->setCode(200)
             ->setMessage("Topic (" . $id . ") `" . $topic->post_title . "` deleted successfully");
-    }
-
-    public function strToUrl(string $str): string {
-
-        // Replace quote by dash
-        $str = preg_replace("/(\w)'(\w)/", '$1-$2', $str);
-
-    // Replace special chars with ASCII equivalent if exists
-        $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
-
-        // Remove non-alphanumeric chars then replace spaces by dash
-        $str = preg_replace('/[^a-zA-Z0-9\s-]/', '', $str);
-        $str = preg_replace('/\s+/', '-', trim($str));
-
-        return strtolower($str);
     }
 }

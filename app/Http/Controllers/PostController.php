@@ -52,7 +52,7 @@ class PostController extends Controller
 
         $data = array(
             "post_title"=> $request->get("post_title"),
-            "post_slug"=> $this->strToUrl($request->get("post_title")),
+            "post_slug"=> strToUrl($request->get("post_title")),
             "post_description"=> $request->get("post_description"),
             "post_content"=> $request->get("post_content"),
             "post_coordinates"=> serialize(array("lat"=> $request->get("post_coordinates_lat"), "long"=> $request->get("post_coordinates_long"))),
@@ -102,7 +102,7 @@ class PostController extends Controller
 
                 // Generate a new slug only if title is update
                 if ($field === 'post_title') {
-                    $post->post_slug = $this->strToUrl($post->post_title);
+                    $post->post_slug = strToUrl($post->post_title);
                 }
             }
         }
@@ -150,20 +150,5 @@ class PostController extends Controller
             ->success()
             ->setCode(200)
             ->setMessage("Posts for this topic retrieved successfully");
-    }
-
-    public function strToUrl(string $str): string {
-
-        // Replace special chars with ASCII equivalent if exists
-        $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
-
-        // Replace quote by dash
-        $str = preg_replace("/(\b\w)'(\b\w+[^\s])/", '$1-$2', $str);
-
-        // Remove non-alphanumeric chars then replace spaces by dash
-        $str = preg_replace('/[^a-zA-Z0-9\s-]/', '', $str);
-        $str = preg_replace('/\s+/', '-', trim($str));
-
-        return strtolower($str);
     }
 }
