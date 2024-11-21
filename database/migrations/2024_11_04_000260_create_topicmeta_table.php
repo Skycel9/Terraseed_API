@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('topicmeta', function (Blueprint $table) {
-            $table->id('meta_id');
+            $table->id();
             $table->enum('meta_key', ["_meta_topic_metadata"]);
             $table->string('meta_value');
             $table->foreignId('topic_id');

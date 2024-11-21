@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('postmeta', function (Blueprint $table) {
-            $table->id('meta_id');
+            $table->id();
             $table->foreignId('post_id');
             $table->enum('meta_key', ["_meta_attachment_file", "_meta_attachment_metadata"]);
             $table->string("meta_value");
