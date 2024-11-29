@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('role_name');
             $table->string('role_display_name');
+            $table->string('parent_role_id')->nullable();
             $table->foreignId('topic_id')->nullable();
             $table->foreignId('updated_by')->nullable();
             $table->foreignId('deleted_by')->nullable();
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('topic_id')->references('id')->on('topics')->onDelete(null);
+            $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete(null);
         });
     }
 
