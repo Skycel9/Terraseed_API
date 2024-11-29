@@ -24,6 +24,15 @@ class CommentController extends Controller
     }
 
     public function store($id, Request $request) {
+    public function store(int $id, Request $request) {
+        $post = Post::where("post_type", "post")->find($id);
+
+        if (!$post) {
+            throw new NotFoundException("Not found", json_encode(["not_found"=> "The post you're trying to add a comment does not exist"]));
+        }
+
+        $this->authorize("create", [Comment::class, $post]);
+
         $validator = Validator::make($request->all(), [
             "comment_content"=> "required|string",
             "comment_author"=> "required|integer",
@@ -38,7 +47,7 @@ class CommentController extends Controller
 
         $data = array(
             "post_content"=> $request->get("comment_content"),
-            "post_author"=> $request->get("comment_author"),
+            "post_author"=> Auth::id(),
             "post_type"=> "comment",
             "post_parent"=> $id
         );
@@ -65,12 +74,11 @@ class CommentController extends Controller
     }
 
     public function destroy($id) {
-        $comment = Comment::find($id);
+        $comment = Comment::where("post_type", "comment")->find($id);
 
-        if (!$comment) return BaseResource::error()
-            ->setCode(404)
-            ->setMessage("Comment not found")
-            ->setErrors(json_encode(["not_found"=> "The comment you're trying to delete does not exist"]));
+        if (!$comment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The comment you're trying to delete does not exist"]));
+
+        $this->authorize("delete", $comment);
 
         $comment->delete();
 

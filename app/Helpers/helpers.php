@@ -34,3 +34,14 @@ if (!function_exists("strToUrl")) {
         return strtolower($str);
     }
 }
+
+if (!function_exists("getParentTopic")) {
+    function getParentTopic(Post|Comment|Topic|Attachment|null $el): Post|Comment|Topic|Attachment|null {
+        if ($el instanceof Attachment || $el instanceof Comment || $el instanceof Post) {
+            return getParentTopic($el->parent);
+        } elseif ($el instanceof Topic) {
+            return $el;
+        }
+        return null;
+    }
+}

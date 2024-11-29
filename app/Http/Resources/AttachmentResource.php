@@ -13,17 +13,16 @@ class AttachmentResource extends BaseResource
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array {
-        $author = new UserResource(User::FindOrFail($this->post_author));
-        $metadata = new PostmetaCollection($this->resource->metas()->get());
 
+        $this->resource->loadMissing(["metas"]);
         return [
             "id"=> $this->id,
-            "author"=> $author,
+            "author"=> $this->whenLoaded("author", fn ()=> new UserResource($this->author), $this->post_author),
             "title"=>$this->post_title,
             "type"=>$this->post_type,
             "slug"=> $this->post_slug,
-            "parent"=> $this->post_parent,
-            "meta"=> $metadata
+            "parent"=> $this->whenLoaded("parent", fn ()=> new PostResource($this->parent), $this->post_parent),
+            "meta"=> $this->whenLoaded("metas", fn ()=> new PostmetaCollection($this->resource->metas()->get()))
         ];
 
     }

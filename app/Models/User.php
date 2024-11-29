@@ -46,4 +46,54 @@ class User extends Authenticatable
     public function posts() {
         return $this->hasMany(Post::class, "author_id");
     }
+    public function allPermissions()
+    {
+        $permissions = collect();
+
+        foreach ($this->roles as $role) {
+            $permissions = $permissions->merge($role->allPermissions());
+        }
+
+
+        return $permissions->unique(); // Keep unique permission in array
+    }
+    public function hasPermission($permissionName, $topicId = null) {
+        // Get query for all roles of user
+        $rolesQuery = $this->roles();
+
+        if ($topicId) {
+            $rolesQuery->where("topic_id", "=", $topicId);
+        } else {
+            $rolesQuery->where("topic_id", "=", null);
+        }
+
+        $roles = $rolesQuery->get();
+
+        // Check permissions in each role
+        foreach ($roles as $role) {
+            $permissions = $role->allPermissions();
+            if ($permissions->contains('perm_name', $permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function hasRole($roleID) {
+        return $this->roles()->where("role_id", $roleID)->exists();
+    }
+
+    public function rolesTopic($topicId) {
+        return $this->roles()
+            ->whereHas('topic', function ($query) use ($topicId) {
+                $query->where('topics.id', $topicId);
+            })
+            ->get();
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->user_password; // Utilisez 'user_password' à la place de 'password'
+    }
 }

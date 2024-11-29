@@ -34,6 +34,8 @@ class TopicController extends Controller
     }
 
     public function store(Request $request) {
+        $this->authorize("create", Topic::class);
+
         $validator = Validator::make($request->all(), [
             "topic_title"=> "required|string",
             "topic_slug"=> "required|string",
@@ -65,6 +67,12 @@ class TopicController extends Controller
     }
 
     public function update(Request $request, $id) {
+        $topic = Topic::find($id);
+        $old_topic = Topic::find($id);
+
+        if (!$topic || !$old_topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you trying to edit does not exist"]));
+
+        $this->authorize("update", $topic);
 
         $validator = Validator::make($request->all(), [
             "topic_title"=> "string|nullable",
@@ -127,6 +135,9 @@ class TopicController extends Controller
             ->setCode(404)
             ->setMessage("Topic not found")
             ->setErrors(json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
+
+        $this->authorize("delete", [$topic]);
 
         $topic->delete();
 

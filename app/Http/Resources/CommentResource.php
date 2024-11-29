@@ -15,15 +15,12 @@ class CommentResource extends BaseResource
      */
     public function toArray(Request $request): array
     {
-        $author = new UserResource(User::Find($this->post_author));
-        $post = new PostResource(Post::Find($this->post_parent));
-
         return [
-            "id"=> $this->id,
-            "author"=> $author,
-            "content"=> $this->post_content,
-            "type"=> $this->post_type,
-            "parent"=> $post
+            "id" => $this->id,
+            "author" => $this->whenLoaded("author", fn ()=> new UserResource($this->author), $this->post_author),
+            "content" => $this->post_content,
+            "type" => $this->post_type,
+            "parent" => $this->whenLoaded("parent", fn ()=> new PostResource($this->parent, "comment"), $this->post_parent) // Allow different format of this resource when called from comment section
         ];
     }
 }

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\PostmetaCollection;
 use App\Http\Resources\PostmetaResource;
+use App\Models\Post;
+use App\Models\Topic;
 use Illuminate\Http\Request;
 use App\Models\Attachment;
 use App\Http\Resources\AttachmentCollection;
 use App\Http\Resources\AttachmentResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,7 +38,13 @@ class AttachmentController extends Controller
             ->setMessage("Attachment retrieved successfully");
     }
 
-    public function store(Request $request) {
+    public function store(int $topicId, int $postId, Request $request) {
+        $topic = Topic::find($topicId);
+        $post = Post::find($postId);
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you're trying to access was not found"]));
+        if (!$post) throw new NotFoundException("Not found", json_encode(["not_found"=> "The post you're trying to access was not found"]));
+
+        $this->authorize("create", [Attachment::class, $topic, $post]);
 
         $validator = Validator::make($request->all(), [
             "post_slug"=> "required|string",
@@ -55,8 +64,8 @@ class AttachmentController extends Controller
 
         $data = array(
             "post_type"=> "attachment",
-            "post_author"=> $request->get("post_author"),
-            "post_parent"=> $request->get("post_parent"),
+            "post_author"=> Auth::id(),
+            "post_parent"=> $topicId,
             "post_content"=> $request->get("post_content"),
         );
 
@@ -112,6 +121,13 @@ class AttachmentController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Récupération de l'attachement existant
+        $attachment = Attachment::find($id);
+
+        if (!$attachment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The attachment you're trying to edit is not found"]));
+
+        $this->authorize("update", [$attachment]);
+
         // Validation des données envoyées dans la requête
         $validator = Validator::make($request->all(), [
             "post_slug" => "string|nullable", // Le slug est optionnel
@@ -178,9 +194,13 @@ class AttachmentController extends Controller
 
     public function destroy($id) {
         // Récupération de l'attachement existant
-        $attachment = Attachment::findOrFail($id);
+        $attachment = Attachment::find($id);
 
-        $path = $attachment->metas()->where("meta_key", "_meta_attachment_file")->first()->meta_value;
+        if (!$attachment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The attachment you're trying to delete is not found"]));
+
+        $this->authorize("delete", $attachment);
+
+        $path = ltrim(Storage::url($attachment->metas()->where("meta_key", "_meta_attachment_file")->first()->meta_value), "/");
 
         if (file_exists($path)) {
             try {
