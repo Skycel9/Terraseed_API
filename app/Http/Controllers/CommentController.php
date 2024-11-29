@@ -52,7 +52,6 @@ class CommentController extends Controller
 
         $validator = Validator::make($request->all(), [
             "comment_content"=> "required|string",
-            "comment_author"=> "required|integer",
         ]);
 
         if ($validator->fails()) {
@@ -75,18 +74,6 @@ class CommentController extends Controller
             ->setMessage("Comment created successfully");
     }
 
-    public function show($id) {
-        $comment = Comment::where("id", $id)
-            ->where("post_type", "comment")
-            ->firstOrFail();
-        $resource = new CommentResource($comment);
-
-        return $resource
-            ->success()
-            ->setCode(200)
-            ->setMessage("Comment retrieved successfully");
-    }
-
     public function destroy($id) {
         $comment = Comment::where("post_type", "comment")->find($id);
 
@@ -101,18 +88,6 @@ class CommentController extends Controller
         return BaseResource::error()
             ->success()
             ->setCode(200)
-            ->setMessage("Comment (" . $id . ") `" . $this->truncateString($comment->post_content, 20) . "` posted by `" . $author->user_display_name . "` deleted successfully");
-    }
-
-    function truncateString(string $input, int $limit): string
-    {
-        // Vérifie si la chaîne est plus longue que la limite
-        if (strlen($input) > $limit) {
-            // Coupe la chaîne à la limite spécifiée et ajoute "..."
-            return substr($input, 0, $limit) . '...';
-        }
-
-        // Retourne la chaîne si elle est déjà inférieure ou égale à la limite
-        return $input;
+            ->setMessage("Comment (" . $id . ") `" . truncateString($comment->post_content, 20) . "` posted by `" . $author->user_display_name . "` deleted successfully");
     }
 }

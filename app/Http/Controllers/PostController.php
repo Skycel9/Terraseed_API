@@ -94,7 +94,6 @@ class PostController extends Controller
         }
 
         $post = Post::findOrFail($id);
-        $old_post = Post::findOrFail($id);
 
         $fieldsToUpdate = [
             'post_title' => 'post_title',

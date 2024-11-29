@@ -77,7 +77,6 @@ class TopicController extends Controller
 
         $validator = Validator::make($request->all(), [
             "topic_title"=> "string|nullable",
-            "topic_slug"=> "string|nullable",
             "topic_banner"=> "string|nullable",
             "topic_icon"=> "string|nullable",
         ]);
@@ -89,12 +88,8 @@ class TopicController extends Controller
                 ->setErrors($validator->errors());
         }
 
-        $topic = Topic::findOrFail($id);
-        $old_topic = Topic::findOrFail($id);
-
         $fieldsToUpdate = [
             'topic_title' => 'topic_title',
-            'topic_slug' => 'topic_slug',
             'topic_banner' => 'topic_banner',
             'topic_icon' => 'topic_icon',
         ];

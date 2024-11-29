@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Attachment;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\Topic;
+
 if (!function_exists("gcd")) {
     function gcd($a, $b) {
         return ($a % $b) ? gcd($b, $a % $b) : $b;
