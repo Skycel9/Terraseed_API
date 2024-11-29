@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
 use Illuminate\Http\Request;
 use App\Models\Post;
@@ -23,8 +25,9 @@ class PostController extends Controller
             ->setMessage("Post list loaded successfully");
     }
     public function show($id) {
-        $post = Post::findOrFail($id);
         $post = Post::where("post_type", "post")->find($id);
+
+        if (!$post) throw new NotFoundException("Not found", json_encode(["not_found"=> "The post you're trying to access does not exist"]));
 
         $resource = new PostResource($post);
 
@@ -52,10 +55,7 @@ class PostController extends Controller
         ]);
 
         if($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
+            throw new ValidatorException("Data validation failed", $validator->errors());
         }
 
         $data = array(
@@ -90,10 +90,7 @@ class PostController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
+            throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
         }
 
         $post = Post::findOrFail($id);
@@ -153,7 +150,8 @@ class PostController extends Controller
     {
         $topic = Topic::find($id);
 
-        $posts = $topic->posts()->where('post_type', 'post')->get();
+        if (!$topic) throw new NotFoundException("Not Found", json_encode(["not_found"=> "The topic you're trying to access does not exist"]));
+
         $posts = $topic->posts()->with("parent")->where('post_type', 'post')->get();
 
 

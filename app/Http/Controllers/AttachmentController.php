@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\PostmetaCollection;
 use App\Http\Resources\PostmetaResource;
@@ -28,8 +30,7 @@ class AttachmentController extends Controller
     }
 
     public function show(int $id) {
-        $attachment = Attachment::where("post_type", "attachment")->FindOrFail($id)/*->where("post_type", "attachment")*/;
-//        $meta = new PostmetaResource($attachment->metas()->first());
+        $attachment = Attachment::where("post_type", "attachment")->FindOrFail($id);
         $resource = new AttachmentResource($attachment);
 
         return $resource
@@ -53,12 +54,7 @@ class AttachmentController extends Controller
             "postmeta_title"=> "string|nullable"
         ]);
 
-        if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
-        }
+        if ($validator->fails()) throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
 
         $data = array(
             "post_type"=> "attachment",
@@ -68,10 +64,7 @@ class AttachmentController extends Controller
         );
 
         if (!$request->hasFile("attachment_file") || !$request->file("attachment_file")->isValid()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Invalid file provided")
-                ->setErrors(json_encode($request->hasFile("attachment_file") ? ["invalid_file"=> "The file is not valid, verify if this file is an image and in supported format"] : ["any_file"=> "Any file was send."] ));
+            throw new ValidatorException("Invalid file provided", json_encode($request->hasFile("attachment_file") ? ["invalid_file"=> "The file is not valid, verify if this file is an image and in supported format"] : ["any_file"=> "Any file was send."] ));
         }
 
         $file = $request->file("attachment_file");

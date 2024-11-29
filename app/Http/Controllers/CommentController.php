@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\UserResource;
+use App\Models\Post;
+use App\Policies\CommentPolicy;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use App\Models\User;
 use App\Http\Resources\CommentCollection;
 use App\Http\Resources\CommentResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class CommentController extends Controller
@@ -51,10 +56,7 @@ class CommentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
+            throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
         }
 
         $data = array(

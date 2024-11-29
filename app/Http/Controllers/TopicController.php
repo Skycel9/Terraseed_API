@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\TopicCollection;
 use App\Http\Resources\TopicResource;
@@ -21,9 +22,10 @@ class TopicController extends Controller
             ->setMessage("Topic list loaded successfully");
     }
 
-    public function show($id)
-    {
-        $topic = Topic::findOrFail($id);
+    public function show($id) {
+        $topic = Topic::find($id);
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found" => "The topic you're trying to access is not exist"]));
+
         $resource = new TopicResource($topic);
 
         return $resource
