@@ -11,9 +11,8 @@ use Illuminate\Support\Facades\Validator;
 
 class TopicController extends Controller
 {
-    public function index($id = null)
-    {
-        $topics = Topic::all();
+    public function index($id = null) {
+        $topics = Topic::with("author")->get();
         $collection = new TopicCollection($topics);
 
         return $collection
@@ -105,7 +104,7 @@ class TopicController extends Controller
                 $topic->{$field} = $request->get($requestField);
 
                 // Generate a new slug only if title is update
-                if ($field === 'topic_title') {
+                if ($field === 'topic_title' && $request->get($requestField)) {
                     $topic->topic_slug = strToUrl($topic->topic_title);
                 }
             }
@@ -131,10 +130,6 @@ class TopicController extends Controller
 
         $topic = Topic::find($id);
 
-        if (!$topic) return BaseResource::error()
-            ->setCode(404)
-            ->setMessage("Topic not found")
-            ->setErrors(json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
         if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
 
         $this->authorize("delete", [$topic]);

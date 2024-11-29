@@ -10,14 +10,14 @@ class Post extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
     public $fillable = array(
         "post_title", "post_slug", "post_description",
         "post_content", "post_coordinates", "post_type",
-        "post_author", "updated_by", "deleted_by", "deleted_at"
+        "post_author", "post_parent", "updated_by", "deleted_by", "deleted_at"
     );
 
-    public function topic()
-    {
+    public function parent() {
         return $this->belongsTo(Topic::class, "id");
     }
     public function author() {

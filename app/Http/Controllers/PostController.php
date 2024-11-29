@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Validator;
 class PostController extends Controller
 {
     public function index($id = null) {
-        $posts = Post::where("post_type", "post")->get();
+        $posts = Post::with("author")->where("post_type", "post")->get();
         $collection = new PostCollection($posts);
 
         return $collection
@@ -24,6 +24,8 @@ class PostController extends Controller
     }
     public function show($id) {
         $post = Post::findOrFail($id);
+        $post = Post::where("post_type", "post")->find($id);
+
         $resource = new PostResource($post);
 
         return $resource
@@ -46,9 +48,7 @@ class PostController extends Controller
             "post_description"=> "required|string",
             "post_content"=> "required|string",
             "post_coordinates_lat"=> "decimal:1,10|nullable",
-            "post_coordinates_long"=> "decimal:1,10|nullable",
-            "post_author"=> "required|integer",
-            "post_parent"=> "integer|nullable"
+            "post_coordinates_long"=> "decimal:1,10|nullable"
         ]);
 
         if($validator->fails()) {
@@ -151,9 +151,10 @@ class PostController extends Controller
 
     public function getPostsByTopic($id): PostCollection
     {
-        $topic = Topic::findOrFail($id);
+        $topic = Topic::find($id);
 
         $posts = $topic->posts()->where('post_type', 'post')->get();
+        $posts = $topic->posts()->with("parent")->where('post_type', 'post')->get();
 
 
         return (new PostCollection($posts))

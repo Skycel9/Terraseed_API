@@ -21,4 +21,19 @@ class Topic extends Model
     {
         return $this->hasMany(Post::class, "post_parent");
     }
+
+    public function roles() {
+        return $this->hasMany(Role::class);
+    }
+
+    public function author()  {
+        return $this->belongsTo(User::class, 'topic_author');
+    }
+
+    public function banner() {
+        return $this->belongsTo(Attachment::class, 'topic_banner');
+    }
+    public function icon() {
+        return $this->belongsTo(Attachment::class, 'topic_icon');
+    }
 }

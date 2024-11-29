@@ -24,4 +24,7 @@ class Attachment extends Model
     public function metas() {
         return $this->hasMany(Postmeta::class, "post_id", "id");
     }
+    public function parent() {
+        return $this->belongsTo(Post::class, 'post_parent');
+    }
 }

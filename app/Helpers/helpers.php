@@ -45,3 +45,17 @@ if (!function_exists("getParentTopic")) {
         return null;
     }
 }
+
+if (!function_exists("truncateString")) {
+    function truncateString(string $input, int $limit): string
+    {
+        // Check if string length
+        if (strlen($input) > $limit) {
+            // Cut the string at specified length and add "..."
+            return substr($input, 0, $limit) . '...';
+        }
+
+        // Return unmodified string if length is less or equal than limit
+        return $input;
+    }
+}

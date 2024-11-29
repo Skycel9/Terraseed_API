@@ -23,7 +23,19 @@ class CommentController extends Controller
             ->setMessage("Comment list loaded successfully");
     }
 
-    public function store($id, Request $request) {
+    public function show($id) {
+        $comment = Comment::where("id", $id)
+//            ->with("author")
+            ->where("post_type", "comment")
+            ->firstOrFail();
+        $resource = new CommentResource($comment);
+
+        return $resource
+            ->success()
+            ->setCode(200)
+            ->setMessage("Comment retrieved successfully");
+    }
+
     public function store(int $id, Request $request) {
         $post = Post::where("post_type", "post")->find($id);
 

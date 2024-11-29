@@ -48,8 +48,6 @@ class AttachmentController extends Controller
 
         $validator = Validator::make($request->all(), [
             "post_slug"=> "required|string",
-            "post_author"=> "required|integer",
-            "post_parent"=> "integer|nullable",
             "attachment_file"=> "file|image", //"required|file|image"
             "postmeta_alt"=> "string|nullable",
             "postmeta_title"=> "string|nullable"
@@ -119,7 +117,7 @@ class AttachmentController extends Controller
             ->setMessage("Attachment upload successfully");
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         // Récupération de l'attachement existant
         $attachment = Attachment::find($id);
@@ -135,15 +133,7 @@ class AttachmentController extends Controller
             "postmeta_title" => "string|nullable" // Title est optionnel
         ]);
 
-        if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
-        }
-
-        // Récupération de l'attachement existant
-        $attachment = Attachment::findOrFail($id);
+        if ($validator->fails()) throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
 
         // Récupération des métadonnées existantes
         $old_metadata = $attachment->metas()->where('meta_key', '_meta_attachment_metadata')->first();

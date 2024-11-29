@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = array(
-        "user_login", "user_display_name", "user_email",
+        "user_login", "user_display_name", "user_email", "user_password",
         "user_phone_number", "user_phone_ext", "user_lastname",
         "user_firstname", "user_birthday", "user_gender"
     );
@@ -46,6 +46,13 @@ class User extends Authenticatable
     public function posts() {
         return $this->hasMany(Post::class, "author_id");
     }
+
+    // Manage Authentication and permissions
+
+    public function roles() {
+        return $this->belongsToMany(Role::class, 'users_roles');
+    }
+
     public function allPermissions()
     {
         $permissions = collect();
@@ -96,4 +103,18 @@ class User extends Authenticatable
     {
         return $this->user_password; // Utilisez 'user_password' à la place de 'password'
     }
+
+    /*public function roles() {
+        return $this->belongsToMany(Role::class, "users_roles");
+    }
+    public function rolesForTopic($topicId) {
+        return $this->roles()->where("topic_id", $topicId);
+    }
+    public function hasPermission($permissionName, $topicId = null) {
+        $query = $this->roles()->whereHas("permissions", function ($query) use ($permissionName) {
+            $query->where("perm_name", $permissionName);
+        });
+
+        return $query->exists();
+    }*/
 }

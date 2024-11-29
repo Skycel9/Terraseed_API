@@ -15,6 +15,13 @@ class Comment extends Model
 
     public $fillable = array(
         "post_content", "post_author", "post_type",
-        "is_published"
+        "post_parent", "is_published"
     );
+
+    public function author() {
+        return $this->belongsTo(User::class, 'post_author');
+    }
+    public function parent() {
+        return $this->belongsTo(Post::class, 'post_parent');
+    }
 }
