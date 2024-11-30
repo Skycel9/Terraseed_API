@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PostController;
@@ -43,6 +44,8 @@ Route::middleware("auth.optional")->group(function () {
     Route::apiResource("posts.comments", CommentController::class)->withTrashed()->only(["index", "show"])->shallow();
 
     Route::apiResource("attachments", AttachmentController::class)->withTrashed()->only(["index", "show"]);
+
+    Route::apiResource("tags", TagController::class)->withTrashed()->only(["index", "show"]);
 });
 
 Route::post('register', [UserController::class, 'register']);
@@ -62,6 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Allow attachments edition to authenticated users
     Route::apiResource("attachments", AttachmentController::class)->withTrashed()->only(["update", "destroy"]);
     Route::post("topics/{topic_id}/posts/{post_id}/attachments", [AttachmentController::class, 'store']);
+
+    // Allow tags edition to authenticated users
+    Route::apiResource("tags", TagController::class)->withTrashed()->only(["store", "update", "destroy"]);
 
     Route::put('profile', [UserController::class, 'updateProfile']);
     Route::get('user-posts', [UserController::class, 'userPosts']);
