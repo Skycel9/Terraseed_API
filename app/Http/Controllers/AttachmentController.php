@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
-use App\Http\Resources\PostmetaCollection;
 use App\Http\Resources\PostmetaResource;
 use App\Models\Post;
 use App\Models\Topic;
@@ -20,7 +19,7 @@ use Illuminate\Support\Facades\Validator;
 class AttachmentController extends Controller
 {
     public function index() {
-        $attachments = Attachment::where("post_type", "attachment")->get();
+        $attachments = Attachment::all();
         $collection = new AttachmentCollection($attachments);
 
         return $collection
@@ -30,7 +29,7 @@ class AttachmentController extends Controller
     }
 
     public function show(int $id) {
-        $attachment = Attachment::where("post_type", "attachment")->FindOrFail($id);
+        $attachment = Attachment::FindOrFail($id);
         $resource = new AttachmentResource($attachment);
 
         return $resource

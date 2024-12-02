@@ -7,7 +7,6 @@ use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\UserResource;
 use App\Models\Post;
-use App\Policies\CommentPolicy;
 use Illuminate\Http\Request;
 use App\Models\Comment;
 use App\Models\User;
@@ -19,7 +18,7 @@ use Illuminate\Support\Facades\Validator;
 class CommentController extends Controller
 {
     public function index() {
-        $comments = Comment::where('post_type', "comment")->get();
+        $comments = Comment::all();
         $collection = new CommentCollection($comments);
 
         return $collection
@@ -42,7 +41,7 @@ class CommentController extends Controller
     }
 
     public function store(int $id, Request $request) {
-        $post = Post::where("post_type", "post")->find($id);
+        $post = Post::find($id);
 
         if (!$post) {
             throw new NotFoundException("Not found", json_encode(["not_found"=> "The post you're trying to add a comment does not exist"]));
@@ -75,7 +74,7 @@ class CommentController extends Controller
     }
 
     public function destroy($id) {
-        $comment = Comment::where("post_type", "comment")->find($id);
+        $comment = Comment::find($id);
 
         if (!$comment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The comment you're trying to delete does not exist"]));
 

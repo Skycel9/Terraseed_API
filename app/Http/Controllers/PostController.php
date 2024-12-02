@@ -145,18 +145,14 @@ class PostController extends Controller
             ->setMessage("Post (" . $id . ") `" . $post->post_title . "` deleted successfully");
     }
 
-    public function getPostsByTopic($id): PostCollection
-    {
-        $topic = Topic::find($id);
+    public function getPostsMap($location = null) {
+        // TODO : Logic to get all close point by user location
+        $posts = Post::with("attachments")->get();
+        $collection = new PostCollection($posts);
 
-        if (!$topic) throw new NotFoundException("Not Found", json_encode(["not_found"=> "The topic you're trying to access does not exist"]));
-
-        $posts = $topic->posts()->with("parent")->where('post_type', 'post')->get();
-
-
-        return (new PostCollection($posts))
+        return $collection
             ->success()
             ->setCode(200)
-            ->setMessage("Posts for this topic retrieved successfully");
+            ->setMessage("Post list loaded successfully");
     }
 }
