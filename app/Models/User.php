@@ -101,7 +101,11 @@ class User extends Authenticatable
 
     public function getAuthPassword()
     {
-        return $this->user_password; // Utilisez 'user_password' à la place de 'password'
+        return $this->user_password; // Replace 'password' by 'user_password' in auth system
+    }
+
+    public function likes() {
+        return $this->belongsToMany(Content::class, "likes", "user_id", "post_id");
     }
 
     /*public function roles() {

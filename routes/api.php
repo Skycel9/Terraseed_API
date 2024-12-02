@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LikeController;
 use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,7 +34,13 @@ Route::get("test", function (Request $request) {
 });
 
 // Use custom auth class to allow authenticated or non-authenticated requests
+// Required to auth users when token provide and don't ignore the token
+//   -> Used by permissions based response output
 Route::middleware("auth.optional")->group(function () {
+
+    // Manage likes endpoints
+    Route::get("posts/{id}/likes", [LikeController::class, "getLikes"])->name("posts.likes");
+    Route::get("comments/{id}/likes", [LikeController::class, "getLikes"])->name("comments.likes");
 
     // Get nearest point from user location endpoint
     Route::get("posts/map", [PostController::class, "getPostsMap"])->name("posts.map");
@@ -55,6 +62,13 @@ Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login'])->name("login");
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Manage like endpoint
+    Route::get("users/{id}/likes", [LikeController::class, "getUserLikes"])->name("users.like");
+    Route::post("posts/{id}/like", [LikeController::class, "like"])->name("posts.like");
+    Route::delete("posts/{id}/unlike", [LikeController::class, "unlike"])->name("posts.unlike");
+    Route::post("comments/{id}/like", [LikeController::class, "like"])->name("comments.like");
+    Route::delete("comments/{id}/unlike", [LikeController::class, "unlike"])->name("comments.unlike");
+
     // Allow posts edition to authenticated users
     Route::apiResource("posts", PostController::class)->withTrashed()->only(["update", "destroy"]);
     Route::post("topics/{id}/posts", [PostController::class, 'store']);
