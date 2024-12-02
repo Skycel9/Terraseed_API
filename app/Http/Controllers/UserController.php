@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Resources\BaseResource;
-use App\Http\Resources\PermissionCollection;
+use App\Http\Resources\PostCollection;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
-use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -156,21 +154,19 @@ class UserController extends Controller
             ->setMessage("Profile updated successfully");
     }
 
-    // Accéder aux publications de l'utilisateur
+
     public function userPosts()
     {
         $user = Auth::user();
-        $posts = $user->posts; // Assurez-vous d'avoir défini la relation "posts" dans votre modèle User
+        $posts = $user->posts;
 
-        return (new UserCollection($posts))
+        return (new PostCollection($posts))
             ->success()
             ->setCode(200)
             ->setMessage("User's posts retrieved successfully");
     }
 
-    // Supprimer le compte
-    public function deleteAccount()
-    {
+    public function deleteAccount() {
         $user = Auth::user();
         $user->delete();
 
