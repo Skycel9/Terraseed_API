@@ -3,7 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class PostResource extends BaseResource
 {
@@ -21,6 +21,18 @@ class PostResource extends BaseResource
      */
     public function toArray(Request $request): array
     {
+        $route = Route::currentRouteName();
+
+        if ($route === "posts.map") {
+            return array(
+                "id"=> $this->id,
+                "title"=> $this->post_title,
+                "slug"=> $this->slug,
+                "coordinates"=> $this->when($this->post_coordinates != null, unserialize($this->post_coordinates)),
+                "upload_at"=> $this->created_at,
+                "attachments"=> $this->whenLoaded("attachments", fn ()=> AttachmentResource::collection($this->attachments))
+            );
+        }
 
         $result = [
             "id" => $this->id,

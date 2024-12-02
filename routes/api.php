@@ -35,6 +35,9 @@ Route::get("test", function (Request $request) {
 // Use custom auth class to allow authenticated or non-authenticated requests
 Route::middleware("auth.optional")->group(function () {
 
+    // Get nearest point from user location endpoint
+    Route::get("posts/map", [PostController::class, "getPostsMap"])->name("posts.map");
+
     Route::apiResource("posts", PostController::class)->withTrashed()->only(["index", "show"]);
     Route::get('topics/{id}/posts', [TopicController::class, 'getPosts']);
     Route::get('tags/{id}/posts', [TagController::class, 'getPosts']);
