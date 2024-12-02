@@ -128,4 +128,16 @@ class TagController extends Controller
             ->setCode(200)
             ->setMessage("Tag (" . $id . ") `" . $tag->tag_name . "` deleted successfully");
     }
+
+    public function getPosts(int $id) {
+        $tag = Tag::find($id);
+        if (!$tag) throw new NotFoundException("Not found", json_encode(["not_found" => "The tag you're trying to access was not found"]));
+
+        $posts = $tag->posts()->where("post_type", "post")->get();
+
+        return (new PostCollection($posts))
+            ->success()
+            ->setCode(200)
+            ->setMessage("Posts list by tag loaded successfully");
+    }
 }

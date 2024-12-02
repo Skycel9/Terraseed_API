@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\NotFoundException;
 use App\Http\Resources\BaseResource;
+use App\Http\Resources\PostCollection;
 use App\Http\Resources\TopicCollection;
 use App\Http\Resources\TopicResource;
 use App\Models\Topic;
@@ -137,5 +138,19 @@ class TopicController extends Controller
             ->success()
             ->setCode(200)
             ->setMessage("Topic (" . $id . ") `" . $topic->post_title . "` deleted successfully");
+    }
+
+    public function getPosts($id): PostCollection {
+        $topic = Topic::find($id);
+
+        if (!$topic) throw new NotFoundException("Not Found", json_encode(["not_found"=> "The topic you're trying to access does not exist"]));
+
+        $posts = $topic->posts()->with("parent")->where('post_type', 'post')->get();
+
+
+        return (new PostCollection($posts))
+            ->success()
+            ->setCode(200)
+            ->setMessage("Posts for this topic retrieved successfully");
     }
 }

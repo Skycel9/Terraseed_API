@@ -36,8 +36,8 @@ Route::get("test", function (Request $request) {
 Route::middleware("auth.optional")->group(function () {
 
     Route::apiResource("posts", PostController::class)->withTrashed()->only(["index", "show"]);
-
-    Route::get('topics/{id}/posts', [PostController::class, 'getPostsByTopic']);
+    Route::get('topics/{id}/posts', [TopicController::class, 'getPosts']);
+    Route::get('tags/{id}/posts', [TagController::class, 'getPosts']);
 
     Route::apiResource("topics", TopicController::class)->withTrashed()->only(["index", "show"]);
 

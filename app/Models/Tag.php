@@ -19,4 +19,7 @@ class Tag extends Model
     public function author() {
         return $this->belongsTo(User::class, "tag_author");
     }
+    public function posts() {
+        return $this->belongsToMany(Post::class, "taged", "tag_id", "post_id");
+    }
 }
