@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\RelationController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +111,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post("me/accept/{id}", [RelationController::class, "accept"])->name("users.accept");
         Route::delete("me/reject/{id}", [RelationController::class, "reject"])->name("users.reject");
 
+        Route::get("me/subscriptions", [SubscriptionController::class, "index"])->name("users.subscriptions");
+        Route::post("me/subscribe/{id}", [SubscriptionController::class, "subscribe"])->name("users.subscribe");
+        Route::delete("me/unsubscribe/{id}", [SubscriptionController::class, "unsubscribe"])->name("users.unsubscribe");
     });
 });
 

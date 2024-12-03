@@ -123,6 +123,10 @@ class User extends Authenticatable
     public function invites() {
         return $this->belongsToMany(User::class, "users_relations", "user_target_id", "requester_id")->wherePivot("relation_status", "pending");
     }
+
+    public function subscriptions() {
+        return $this->belongsToMany(Topic::class, "subscriptions", "user_id", "topic_id");
+    }
     /*public function roles() {
         return $this->belongsToMany(Role::class, "users_roles");
     }
