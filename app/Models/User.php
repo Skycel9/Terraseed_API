@@ -108,6 +108,21 @@ class User extends Authenticatable
         return $this->belongsToMany(Content::class, "likes", "user_id", "post_id");
     }
 
+    public function following() {
+        return $this->belongsToMany(User::class, "users_relations", "requester_id", "user_target_id")->wherePivot("relation_status", "accept");
+    }
+    public function followers() {
+        return $this->belongsToMany(User::class, "users_relations", "user_target_id", "requester_id")->wherePivot("relation_status", "accept");
+    }
+    public function blacklisted() {
+        return $this->belongsToMany(User::class, "users_relations", "requester_id", "user_target_id")->wherePivot("relation_status", "blocked");
+    }
+    public function requested() {
+        return $this->belongsToMany(User::class, "users_relations", "requester_id", "user_target_id")->wherePivot("relation_status", "pending");
+    }
+    public function invites() {
+        return $this->belongsToMany(User::class, "users_relations", "user_target_id", "requester_id")->wherePivot("relation_status", "pending");
+    }
     /*public function roles() {
         return $this->belongsToMany(Role::class, "users_roles");
     }

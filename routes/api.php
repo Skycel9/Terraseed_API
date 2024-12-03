@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LikeController;
+use App\Http\Controllers\RelationController;
 use App\Http\Controllers\TagController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -62,7 +63,7 @@ Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login'])->name("login");
 
 Route::middleware('auth:sanctum')->group(function () {
-    // Manage like endpoint
+    // Manage like endpoints
     Route::get("users/{id}/likes", [LikeController::class, "getUserLikes"])->name("users.like");
     Route::post("posts/{id}/like", [LikeController::class, "like"])->name("posts.like");
     Route::delete("posts/{id}/unlike", [LikeController::class, "unlike"])->name("posts.unlike");
@@ -91,6 +92,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('delete-account', [UserController::class, 'deleteAccount']);
     Route::get("me", [UserController::class, 'me'])->name("me");
     Route::get("profile/{id}", [UserController::class, "getProfile"]);
+
+    // Manage users relations endpoints
+    Route::group(["prefix" => "users"], function () {
+        Route::get("me/following", [RelationController::class, "getFollowing"])->name("users.following");
+        Route::get("me/followers", [RelationController::class, "getFollowers"])->name("users.followers");
+        Route::get("me/relations/pending", [RelationController::class, "getPending"])->name("users.relations.pending");
+        Route::get("me/relations/requested", [RelationController::class, "getRequested"])->name("users.relations.requested");
+        Route::get("me/blacklist", [RelationController::class, "getBlacklist"])->name("users.blacklist");
+
+        Route::post("me/follow/{id}", [RelationController::class, "follow"])->name("users.follow");
+        Route::delete("me/unfollow/{id}", [RelationController::class, "unfollow"])->name("users.unfollow");
+
+        Route::post("me/block/{id}", [RelationController::class, "block"])->name("users.block");
+        Route::delete("me/unblock/{id}", [RelationController::class, "unblock"])->name("users.unblock");
+
+        Route::post("me/accept/{id}", [RelationController::class, "accept"])->name("users.accept");
+        Route::delete("me/reject/{id}", [RelationController::class, "reject"])->name("users.reject");
+
+    });
 });
 
 

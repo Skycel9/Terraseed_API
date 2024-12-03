@@ -21,7 +21,7 @@ class UserResource extends BaseResource
         if ($route === "login" || $route === "register" || $route === "me") {
             return array(
                 "id"=> $this->id,
-                "displayName"=> $this->user_display_name,
+                "displayName"=> $this->when($this->user_display_name, $this->user_display_name, $this->user_login),
                 "contact"=> [
                     "email"=> $this->user_email,
                     "phone"=> ["extension"=> $this->user_phone_ext, "number"=> $this->user_phone_number]
@@ -40,7 +40,7 @@ class UserResource extends BaseResource
 
         return array(
             "id"=> $this->id,
-            "displayName"=> $this->user_display_name,
+            "displayName"=> $this->when($this->user_display_name, $this->user_display_name, $this->user_login),
             $this->mergeWhen($user?->hasRole(4), [
                 "contact"=> [
                     "email"=> $this->user_email,
