@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('role_name');
             $table->string('role_display_name');
-            $table->string('parent_role_id')->nullable();
+            $table->foreignId('parent_role_id')->nullable();
             $table->foreignId('topic_id')->nullable();
             $table->foreignId('updated_by')->nullable();
             $table->foreignId('deleted_by')->nullable();
