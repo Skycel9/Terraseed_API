@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AuthorizationException;
+use App\Http\Resources\AttachmentCollection;
 use App\Http\Resources\BaseResource;
+use App\Http\Resources\CommentCollection;
 use App\Http\Resources\PostCollection;
+use App\Http\Resources\TagCollection;
+use App\Http\Resources\TopicCollection;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\UserCollection;
 use App\Models\User;
@@ -15,7 +20,24 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    // Inscription
+    // === Get Profile ===
+    public function getProfile(int $id = null) {
+        $user = User::Find(Auth::id());
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization"=> "You need to be authenticated to access this resource"]));
+
+        $profile = User::Find($id) ?? $user;
+        if (!$profile) throw new AuthorizationException("User not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
+
+        $profile = new UserResource($profile);
+        return $profile
+            ->success()
+            ->setCode(200)
+            ->setMessage("User profile retrieved successfully");
+    }
+
+
+    // === User Action ===
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -49,7 +71,6 @@ class UserController extends Controller
             ->additional(['token' => $token]);
     }
 
-    // Connexion
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -77,46 +98,6 @@ class UserController extends Controller
             ->setErrors(json_encode(['message' => 'Invalid email or password']));
     }
 
-    public function me()
-    {
-        // Récupérer l'utilisateur connecté
-        $user = Auth::user();
-
-        if (!$user) {
-            return BaseResource::error()
-                ->setCode(401)
-                ->setMessage("Unauthenticated")
-                ->setErrors(['message' => 'You are not authenticated.']);
-        }
-
-        // Retourner les informations de l'utilisateur avec un format uniforme
-        return (new UserResource($user))
-            ->success()
-            ->setCode(200)
-            ->setMessage("User information retrieved successfully");
-    }
-
-    public function getProfile(int $id) {
-        $user = User::Find(Auth::id());
-
-        $profile = User::Find($id);
-
-        // Return all information if user is SuperAdmin
-//        if ($user->hasRole(1)) {
-//            $profile = $profile->with("roles")->get();
-//        }
-//        return (new PermissionCollection($user->allPermissions()))->success()->setCode(200);
-
-
-        $profile = new UserResource($profile);
-        return $profile
-            ->success()
-            ->setCode(200)
-            ->setMessage("User profile retrieved successfully");
-    }
-
-
-    // Modifier le profil
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
@@ -154,18 +135,6 @@ class UserController extends Controller
             ->setMessage("Profile updated successfully");
     }
 
-
-    public function userPosts()
-    {
-        $user = Auth::user();
-        $posts = $user->posts;
-
-        return (new PostCollection($posts))
-            ->success()
-            ->setCode(200)
-            ->setMessage("User's posts retrieved successfully");
-    }
-
     public function deleteAccount() {
         $user = Auth::user();
         $user->delete();
@@ -174,5 +143,158 @@ class UserController extends Controller
             ->success()
             ->setCode(200)
             ->setMessage("Account deleted successfully");
+    }
+
+
+    // === Get content by user ===
+
+    public function getPosts(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization"=> "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
+        }
+
+        $posts = $author->posts;
+
+        if (count($posts) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has publish posts");
+        }
+
+        return (new PostCollection($posts))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's posts retrieved successfully");
+    }
+
+    public function getComments(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization"=> "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
+        }
+
+        $comments = $author->comments;
+
+        if (count($comments) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has publish comments");
+        }
+
+        return (new CommentCollection($comments))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's comments retrieved successfully");
+    }
+
+    public function getTopics(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found" => "The user you are looking for does not exist"]));
+        }
+
+        $topics = $author->topics;
+
+        if (count($topics) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has create any topics");
+        }
+
+        return (new TopicCollection($topics))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's topics retrieved successfully");
+    }
+
+    public function getAttachments(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found" => "The user you are looking for does not exist"]));
+        }
+
+        $attachments = $author->attachments;
+
+        if (count($attachments) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has upload any attachments");
+        }
+
+        return (new AttachmentCollection($attachments))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's attachments retrieved successfully");
+    }
+
+    public function getTags(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found" => "The user you are looking for does not exist"]));
+        }
+
+        $tags = $author->tags;
+
+        if (count($tags) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has tag any posts");
+        }
+
+        return (new TagCollection($tags))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's tags retrieved successfully");
+    }
+
+    public function getLikes(int|null $id = null) {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        $author = $user;
+        if ($id) {
+            $author = User::find($id);
+            if (!$author) throw new AuthorizationException("User not found", json_encode(["not_found" => "The user you are looking for does not exist"]));
+        }
+
+        $likes = $author->likes;
+
+        if (count($likes) <= 0) {
+            return (new BaseResource([]))
+                ->success()
+                ->setCode(200)
+                ->setMessage("User has liked any posts");
+        }
+
+        return (new PostCollection($likes))
+            ->success()
+            ->setCode(200)
+            ->setMessage("User's likes retrieved successfully");
     }
 }

@@ -14,9 +14,16 @@ use Illuminate\Support\Facades\Auth;
 class RelationController extends Controller
 {
 
-    public function getFollowing() {
+    // === Getters ===
+
+    public function getFollowing(int|null $id = null) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found" => "The user you are trying to access does not exist"]));
+        }
 
         $following = $user->following;
 
@@ -26,9 +33,14 @@ class RelationController extends Controller
             ->setMessage("The list of users you are following loaded successfully");
     }
 
-    public function getFollowers() {
+    public function getFollowers(int|null $id = null) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found" => "The user you are trying to access does not exist"]));
+        }
 
         $followers = $user->followers;
 
@@ -38,9 +50,14 @@ class RelationController extends Controller
             ->setMessage("The list of users following you loaded successfully");
     }
 
-    public function getPending() {
+    public function getPending(int|null $id = null) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found" => "The user you are trying to access does not exist"]));
+        }
 
         $pending = $user->invites;
 
@@ -50,9 +67,14 @@ class RelationController extends Controller
             ->setMessage("The list of users you have sent invitations to loaded successfully");
     }
 
-    public function getRequested() {
+    public function getRequested(int|null $id = null) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        if ($id) {
+            $user = USer::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found" => "The user you are trying to access does not exist"]));
+        }
 
         $requested = $user->requested;
 
@@ -62,9 +84,14 @@ class RelationController extends Controller
             ->setMessage("The list of users you have send invitation from loaded successfully");
     }
 
-    public function getBlacklist() {
+    public function getBlacklist(int|null $id = null) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found" => "The user you are trying to access does not exist"]));
+        }
 
         $blacklist = $user->blacklisted;
 
@@ -75,6 +102,7 @@ class RelationController extends Controller
     }
 
 
+    // === User relations action ===
     public function follow(int $id) {
         $user = Auth::user();
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization" => "You need to be authenticated to access this resource"]));
@@ -251,6 +279,8 @@ class RelationController extends Controller
             ->setMessage("You have rejected the user's follow request");
     }
 
+
+    // === Util functions ===
 
     private function checkIfBlocked($userId, $targetId)
     {

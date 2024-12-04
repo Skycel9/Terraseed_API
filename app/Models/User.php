@@ -43,16 +43,10 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function posts() {
-        return $this->hasMany(Post::class, "author_id");
-    }
-
     // Manage Authentication and permissions
-
     public function roles() {
         return $this->belongsToMany(Role::class, 'users_roles');
     }
-
     public function allPermissions()
     {
         $permissions = collect();
@@ -102,6 +96,23 @@ class User extends Authenticatable
     public function getAuthPassword()
     {
         return $this->user_password; // Replace 'password' by 'user_password' in auth system
+    }
+
+    // === Getters ===
+    public function posts() {
+        return $this->hasMany(Post::class, "post_author")->where("post_type", "post");
+    }
+    public function comments() {
+        return $this->hasMany(Comment::class, "post_author")->where("post_type", "comment");
+    }
+    public function topics() {
+        return $this->hasMany(Topic::class, "topic_author");
+    }
+    public function attachments() {
+        return $this->hasMany(Attachment::class, "post_author");
+    }
+    public function tags() {
+        return $this->hasMany(Tag::class, "tag_author");
     }
 
     public function likes() {

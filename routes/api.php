@@ -25,15 +25,10 @@ use App\Models\User;
 |
 */
 
-Route::get("test", function (Request $request) {
-    $user = User::Find(1)->load("roles.permissions");
-    return (new \App\Http\Resources\PermissionCollection($user->allPermissions()))->success()->setCode(200);
-
-
-    /*$topic = new TopicResource(Topic::find());
-    $topicRoles = $topic->roles()->with("permissions")->get();
-    return \App\Http\Resources\RoleResource::collection($topicRoles);*/
-});
+$userPrefixes = [
+    "me"=> null,
+    "users/{id}"=> "id"
+];
 
 // Use custom auth class to allow authenticated or non-authenticated requests
 // Required to auth users when token provide and don't ignore the token
@@ -63,7 +58,7 @@ Route::middleware("auth.optional")->group(function () {
 Route::post('register', [UserController::class, 'register']);
 Route::post('login', [UserController::class, 'login'])->name("login");
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () use ($userPrefixes) {
     // Manage like endpoints
     Route::get("users/{id}/likes", [LikeController::class, "getUserLikes"])->name("users.like");
     Route::post("posts/{id}/like", [LikeController::class, "like"])->name("posts.like");
@@ -89,31 +84,47 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource("tags", TagController::class)->withTrashed()->only(["store", "update", "destroy"]);
 
     Route::put('profile', [UserController::class, 'updateProfile']);
-    Route::get('user-posts', [UserController::class, 'userPosts']);
     Route::delete('delete-account', [UserController::class, 'deleteAccount']);
-    Route::get("me", [UserController::class, 'me'])->name("me");
-    Route::get("profile/{id}", [UserController::class, "getProfile"]);
+
+    foreach ($userPrefixes as $prefix => $param) {
+        Route::prefix($prefix)->group(function () use ($prefix, $param) {
+            // Get account information
+            Route::get("/", [UserController::class, 'getProfile'])->name("$prefix.profile");
+
+            // Get content from user
+            Route::get("posts", [UserController::class, 'getPosts'])->name("$prefix.posts");
+            Route::get("comments", [UserController::class, 'getComments'])->name("$prefix.comments");
+            Route::get("attachments", [UserController::class, 'getAttachments'])->name("$prefix.attachments");
+            Route::get("topics", [UserController::class, 'getTopics'])->name("$prefix.topics");
+            Route::get("tags", [UserController::class, 'getTags'])->name("$prefix.tags");
+            Route::get("likes", [UserController::class, 'getLikes'])->name("$prefix.likes");
+
+            // Get information about user relations
+            Route::get("following", [RelationController::class, "getFollowing"])->name("$prefix.following");
+            Route::get("followers", [RelationController::class, "getFollowers"])->name("$prefix.followers");
+            Route::get("relations/blacklist", [RelationController::class, "getBlacklist"])->name("$prefix.blacklist");
+            Route::get("relations/pending", [RelationController::class, "getPending"])->name("$prefix.relations.pending");
+            Route::get("relations/requested", [RelationController::class, "getRequested"])->name("$prefix.relations.requested");
+
+            // Get information about user subscriptions
+            Route::get("subscriptions", [SubscriptionController::class, "index"])->name("$prefix.subscriptions");
+        });
+    }
 
     // Manage users relations endpoints
     Route::group(["prefix" => "users"], function () {
-        Route::get("me/following", [RelationController::class, "getFollowing"])->name("users.following");
-        Route::get("me/followers", [RelationController::class, "getFollowers"])->name("users.followers");
-        Route::get("me/relations/pending", [RelationController::class, "getPending"])->name("users.relations.pending");
-        Route::get("me/relations/requested", [RelationController::class, "getRequested"])->name("users.relations.requested");
-        Route::get("me/blacklist", [RelationController::class, "getBlacklist"])->name("users.blacklist");
+        // Manage user relation
+        Route::post("follow/{id}", [RelationController::class, "follow"])->name("users.follow");
+        Route::delete("unfollow/{id}", [RelationController::class, "unfollow"])->name("users.unfollow");
 
-        Route::post("me/follow/{id}", [RelationController::class, "follow"])->name("users.follow");
-        Route::delete("me/unfollow/{id}", [RelationController::class, "unfollow"])->name("users.unfollow");
+        Route::post("block/{id}", [RelationController::class, "block"])->name("users.block");
+        Route::delete("unblock/{id}", [RelationController::class, "unblock"])->name("users.unblock");
 
-        Route::post("me/block/{id}", [RelationController::class, "block"])->name("users.block");
-        Route::delete("me/unblock/{id}", [RelationController::class, "unblock"])->name("users.unblock");
+        Route::post("accept/{id}", [RelationController::class, "accept"])->name("users.accept");
+        Route::delete("reject/{id}", [RelationController::class, "reject"])->name("users.reject");
 
-        Route::post("me/accept/{id}", [RelationController::class, "accept"])->name("users.accept");
-        Route::delete("me/reject/{id}", [RelationController::class, "reject"])->name("users.reject");
-
-        Route::get("me/subscriptions", [SubscriptionController::class, "index"])->name("users.subscriptions");
-        Route::post("me/subscribe/{id}", [SubscriptionController::class, "subscribe"])->name("users.subscribe");
-        Route::delete("me/unsubscribe/{id}", [SubscriptionController::class, "unsubscribe"])->name("users.unsubscribe");
+        Route::post("subscribe/{id}", [SubscriptionController::class, "subscribe"])->name("users.subscribe");
+        Route::delete("unsubscribe/{id}", [SubscriptionController::class, "unsubscribe"])->name("users.unsubscribe");
     });
 });
 
