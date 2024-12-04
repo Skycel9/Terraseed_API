@@ -109,6 +109,13 @@ Route::middleware('auth:sanctum')->group(function () use ($userPrefixes) {
             // Get information about user subscriptions
             Route::get("subscriptions", [SubscriptionController::class, "index"])->name("$prefix.subscriptions");
         });
+
+        Route::group(["prefix"=> "admin"], function() {
+            Route::get("users", [UserController::class, "index"])->name("admin.users.index");
+
+            Route::put("users/{id}", [UserController::class, "update"])->name("admin.users.update");
+            Route::delete("users/{id}", [UserController::class, "delete"])->name("admin.users.delete");
+        });
     }
 
     // Manage users relations endpoints

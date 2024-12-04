@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\AuthorizationException;
+use App\Exceptions\NotFoundException;
 use App\Http\Resources\AttachmentCollection;
 use App\Http\Resources\BaseResource;
 use App\Http\Resources\CommentCollection;
@@ -17,13 +18,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserController extends Controller
 {
+    public function index() {
+        $user = Auth::user();
+        if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization"=> "You need to be authenticated to access this resource"]));
+
+        $this->authorize("viewAny", User::class);
+
+        return (new UserCollection($user))
+            ->success()
+            ->setCode(200)
+            ->setMessage("Users listed successfully");
+    }
+
     // === Get Profile ===
     public function getProfile(int $id = null) {
         $user = User::Find(Auth::id());
         if (!$user) throw new AuthorizationException("You are not authenticated", json_encode(["authorization"=> "You need to be authenticated to access this resource"]));
+
+        $this->authorize("view", $user);
 
         $profile = User::Find($id) ?? $user;
         if (!$profile) throw new AuthorizationException("User not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
@@ -40,6 +56,8 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
+        $this->authorize("create", User::class);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:25|unique:users,user_login',
             'user_email' => 'required|string|email|max:255|unique:users',
@@ -52,8 +70,6 @@ class UserController extends Controller
                 ->setMessage("Data validation failed")
                 ->setErrors($validator->errors());
         }
-
-//        dd(Hash::make($request->password));
 
         $user = User::create([
             'user_login' => $request->name,
@@ -79,8 +95,6 @@ class UserController extends Controller
             'password' => $credentials["password"], // Laravel mappe automatiquement sur "password"
         ];
 
-//        dd(Auth::attempt($credentials));
-
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             $token = $user->createToken('YourAppName')->plainTextToken;
@@ -98,15 +112,21 @@ class UserController extends Controller
             ->setErrors(json_encode(['message' => 'Invalid email or password']));
     }
 
-    public function updateProfile(Request $request)
-    {
+    public function updateProfile(Request $request, int|null $id = null) {
         $user = Auth::user();
+
+        $this->authorize("update", $user);
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'email' => ['sometimes', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'sometimes|string|min:8|confirmed',
         ]);
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
+        }
 
         if ($validator->fails()) {
             return BaseResource::error()
@@ -135,8 +155,16 @@ class UserController extends Controller
             ->setMessage("Profile updated successfully");
     }
 
-    public function deleteAccount() {
+    public function deleteAccount(int|null $id = null) {
         $user = Auth::user();
+
+        $this->authorize("delete", $user);
+
+        if ($id) {
+            $user = User::find($id);
+            if (!$user) throw new NotFoundException("Not found", json_encode(["not_found"=> "The user you are looking for does not exist"]));
+        }
+
         $user->delete();
 
         return BaseResource::error()
