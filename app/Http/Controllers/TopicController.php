@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
 use App\Http\Resources\BaseResource;
+use App\Http\Resources\PostCollection;
 use App\Http\Resources\TopicCollection;
 use App\Http\Resources\TopicResource;
 use App\Models\Topic;
@@ -11,9 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class TopicController extends Controller
 {
-    public function index($id = null)
-    {
-        $topics = Topic::all();
+    public function index($id = null) {
+        $topics = Topic::with("author")->get();
         $collection = new TopicCollection($topics);
 
         return $collection
@@ -22,9 +23,10 @@ class TopicController extends Controller
             ->setMessage("Topic list loaded successfully");
     }
 
-    public function show($id)
-    {
-        $topic = Topic::findOrFail($id);
+    public function show($id) {
+        $topic = Topic::find($id);
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found" => "The topic you're trying to access is not exist"]));
+
         $resource = new TopicResource($topic);
 
         return $resource
@@ -34,6 +36,8 @@ class TopicController extends Controller
     }
 
     public function store(Request $request) {
+        $this->authorize("create", Topic::class);
+
         $validator = Validator::make($request->all(), [
             "topic_title"=> "required|string",
             "topic_slug"=> "required|string",
@@ -65,10 +69,15 @@ class TopicController extends Controller
     }
 
     public function update(Request $request, $id) {
+        $topic = Topic::find($id);
+        $old_topic = Topic::find($id);
+
+        if (!$topic || !$old_topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you trying to edit does not exist"]));
+
+        $this->authorize("update", $topic);
 
         $validator = Validator::make($request->all(), [
             "topic_title"=> "string|nullable",
-            "topic_slug"=> "string|nullable",
             "topic_banner"=> "string|nullable",
             "topic_icon"=> "string|nullable",
         ]);
@@ -80,12 +89,8 @@ class TopicController extends Controller
                 ->setErrors($validator->errors());
         }
 
-        $topic = Topic::findOrFail($id);
-        $old_topic = Topic::findOrFail($id);
-
         $fieldsToUpdate = [
             'topic_title' => 'topic_title',
-            'topic_slug' => 'topic_slug',
             'topic_banner' => 'topic_banner',
             'topic_icon' => 'topic_icon',
         ];
@@ -97,7 +102,7 @@ class TopicController extends Controller
                 $topic->{$field} = $request->get($requestField);
 
                 // Generate a new slug only if title is update
-                if ($field === 'topic_title') {
+                if ($field === 'topic_title' && $request->get($requestField)) {
                     $topic->topic_slug = strToUrl($topic->topic_title);
                 }
             }
@@ -123,10 +128,9 @@ class TopicController extends Controller
 
         $topic = Topic::find($id);
 
-        if (!$topic) return BaseResource::error()
-            ->setCode(404)
-            ->setMessage("Topic not found")
-            ->setErrors(json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you're trying to delete does not exist"]));
+
+        $this->authorize("delete", [$topic]);
 
         $topic->delete();
 
@@ -134,5 +138,19 @@ class TopicController extends Controller
             ->success()
             ->setCode(200)
             ->setMessage("Topic (" . $id . ") `" . $topic->post_title . "` deleted successfully");
+    }
+
+    public function getPosts($id): PostCollection {
+        $topic = Topic::find($id);
+
+        if (!$topic) throw new NotFoundException("Not Found", json_encode(["not_found"=> "The topic you're trying to access does not exist"]));
+
+        $posts = $topic->posts()->with("parent")->where('post_type', 'post')->get();
+
+
+        return (new PostCollection($posts))
+            ->success()
+            ->setCode(200)
+            ->setMessage("Posts for this topic retrieved successfully");
     }
 }

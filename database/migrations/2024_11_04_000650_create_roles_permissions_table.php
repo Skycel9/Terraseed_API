@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('roles_permissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('perm_id');
+            $table->foreignId('permissions_id');
             $table->foreignId('role_id');
 
-            $table->foreign('perm_id')->references('id')->on('permissions')->onDelete(null);
+            $table->foreign('permissions_id')->references('id')->on('permissions')->onDelete(null);
             $table->foreign('role_id')->references('id')->on('roles')->onDelete(null);
         });
     }

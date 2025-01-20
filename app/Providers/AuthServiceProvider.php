@@ -2,8 +2,20 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+
+// import Models
+use App\Models\Attachment;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\Topic;
+
+// import policies
+use App\Policies\AttachmentPolicy;
+use App\Policies\CommentPolicy;
+use App\Policies\PostPolicy;
+use App\Policies\TopicPolicy;
+
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -13,7 +25,10 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        Attachment::class => AttachmentPolicy::class,
+        Comment::class => CommentPolicy::class,
+        Post::class => PostPolicy::class,
+        Topic::class => TopicPolicy::class
     ];
 
     /**

@@ -16,10 +16,14 @@ return new class extends Migration
             $table->string('tag_name');
             $table->string('tag_slug');
             $table->string('tag_description');
+            $table->string('tag_color');
+            $table->foreignId('tag_author');
             $table->foreignId('updated_by')->nullable();
             $table->foreignId('deleted_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
+
+            $table->foreign('tag_author')->references('id')->on('users')->onDelete(null);
         });
     }
 

@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidatorException;
 use App\Http\Resources\BaseResource;
-use App\Http\Resources\PostmetaCollection;
 use App\Http\Resources\PostmetaResource;
+use App\Models\Post;
+use App\Models\Topic;
 use Illuminate\Http\Request;
 use App\Models\Attachment;
 use App\Http\Resources\AttachmentCollection;
 use App\Http\Resources\AttachmentResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AttachmentController extends Controller
 {
     public function index() {
-        $attachments = Attachment::where("post_type", "attachment")->get();
+        $attachments = Attachment::all();
         $collection = new AttachmentCollection($attachments);
 
         return $collection
@@ -25,8 +29,7 @@ class AttachmentController extends Controller
     }
 
     public function show(int $id) {
-        $attachment = Attachment::where("post_type", "attachment")->FindOrFail($id)/*->where("post_type", "attachment")*/;
-//        $meta = new PostmetaResource($attachment->metas()->first());
+        $attachment = Attachment::FindOrFail($id);
         $resource = new AttachmentResource($attachment);
 
         return $resource
@@ -35,36 +38,32 @@ class AttachmentController extends Controller
             ->setMessage("Attachment retrieved successfully");
     }
 
-    public function store(Request $request) {
+    public function store(int $topicId, int $postId, Request $request) {
+        $topic = Topic::find($topicId);
+        $post = Post::find($postId);
+        if (!$topic) throw new NotFoundException("Not found", json_encode(["not_found"=> "The topic you're trying to access was not found"]));
+        if (!$post) throw new NotFoundException("Not found", json_encode(["not_found"=> "The post you're trying to access was not found"]));
+
+        $this->authorize("create", [Attachment::class, $topic, $post]);
 
         $validator = Validator::make($request->all(), [
             "post_slug"=> "required|string",
-            "post_author"=> "required|integer",
-            "post_parent"=> "integer|nullable",
             "attachment_file"=> "file|image", //"required|file|image"
             "postmeta_alt"=> "string|nullable",
             "postmeta_title"=> "string|nullable"
         ]);
 
-        if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
-        }
+        if ($validator->fails()) throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
 
         $data = array(
             "post_type"=> "attachment",
-            "post_author"=> $request->get("post_author"),
-            "post_parent"=> $request->get("post_parent"),
+            "post_author"=> Auth::id(),
+            "post_parent"=> $topicId,
             "post_content"=> $request->get("post_content"),
         );
 
         if (!$request->hasFile("attachment_file") || !$request->file("attachment_file")->isValid()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Invalid file provided")
-                ->setErrors(json_encode($request->hasFile("attachment_file") ? ["invalid_file"=> "The file is not valid, verify if this file is an image and in supported format"] : ["any_file"=> "Any file was send."] ));
+            throw new ValidatorException("Invalid file provided", json_encode($request->hasFile("attachment_file") ? ["invalid_file"=> "The file is not valid, verify if this file is an image and in supported format"] : ["any_file"=> "Any file was send."] ));
         }
 
         $file = $request->file("attachment_file");
@@ -110,8 +109,15 @@ class AttachmentController extends Controller
             ->setMessage("Attachment upload successfully");
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
+        // Récupération de l'attachement existant
+        $attachment = Attachment::find($id);
+
+        if (!$attachment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The attachment you're trying to edit is not found"]));
+
+        $this->authorize("update", [$attachment]);
+
         // Validation des données envoyées dans la requête
         $validator = Validator::make($request->all(), [
             "post_slug" => "string|nullable", // Le slug est optionnel
@@ -119,15 +125,7 @@ class AttachmentController extends Controller
             "postmeta_title" => "string|nullable" // Title est optionnel
         ]);
 
-        if ($validator->fails()) {
-            return BaseResource::error()
-                ->setCode(400)
-                ->setMessage("Data validation failed")
-                ->setErrors($validator->errors());
-        }
-
-        // Récupération de l'attachement existant
-        $attachment = Attachment::findOrFail($id);
+        if ($validator->fails()) throw new ValidatorException("Data validation failed", json_encode($validator->errors()));
 
         // Récupération des métadonnées existantes
         $old_metadata = $attachment->metas()->where('meta_key', '_meta_attachment_metadata')->first();
@@ -178,9 +176,13 @@ class AttachmentController extends Controller
 
     public function destroy($id) {
         // Récupération de l'attachement existant
-        $attachment = Attachment::findOrFail($id);
+        $attachment = Attachment::find($id);
 
-        $path = $attachment->metas()->where("meta_key", "_meta_attachment_file")->first()->meta_value;
+        if (!$attachment) throw new NotFoundException("Not found", json_encode(["not_found"=> "The attachment you're trying to delete is not found"]));
+
+        $this->authorize("delete", $attachment);
+
+        $path = ltrim(Storage::url($attachment->metas()->where("meta_key", "_meta_attachment_file")->first()->meta_value), "/");
 
         if (file_exists($path)) {
             try {

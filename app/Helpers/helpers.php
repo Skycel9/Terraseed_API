@@ -1,5 +1,10 @@
 <?php
 
+use App\Models\Attachment;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\Topic;
+
 if (!function_exists("gcd")) {
     function gcd($a, $b) {
         return ($a % $b) ? gcd($b, $a % $b) : $b;
@@ -32,5 +37,30 @@ if (!function_exists("strToUrl")) {
         $str = preg_replace('/\s+/', '-', trim($str));
 
         return strtolower($str);
+    }
+}
+
+if (!function_exists("getParentTopic")) {
+    function getParentTopic(Post|Comment|Topic|Attachment|null $el): Post|Comment|Topic|Attachment|null {
+        if ($el instanceof Attachment || $el instanceof Comment || $el instanceof Post) {
+            return getParentTopic($el->parent);
+        } elseif ($el instanceof Topic) {
+            return $el;
+        }
+        return null;
+    }
+}
+
+if (!function_exists("truncateString")) {
+    function truncateString(string $input, int $limit): string
+    {
+        // Check if string length
+        if (strlen($input) > $limit) {
+            // Cut the string at specified length and add "..."
+            return substr($input, 0, $limit) . '...';
+        }
+
+        // Return unmodified string if length is less or equal than limit
+        return $input;
     }
 }

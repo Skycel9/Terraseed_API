@@ -2,8 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PostCollection extends BaseCollection
@@ -19,7 +17,7 @@ class PostCollection extends BaseCollection
 
         return array(
             "list"=> $this->collection->transform(function ($post) {
-                return $post;
+               return $post;
             }),
             "meta"=> [
                 "total"=> $total

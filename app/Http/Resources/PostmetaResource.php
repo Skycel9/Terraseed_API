@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostmetaResource extends BaseResource
 {
@@ -20,8 +19,6 @@ class PostmetaResource extends BaseResource
 
         // - We can also use ternary operator, but this method is an interesting alternative
         return array(
-            "id" => $this->meta_id,
-            "post_id" => $this->post_id,
             "meta_key" => $this->meta_key,
             "meta_value"=> $this->when(
                 str_contains($this->meta_key, "_metadata"),

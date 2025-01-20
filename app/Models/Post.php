@@ -2,25 +2,28 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
-class Post extends Model
+class Post extends Content
 {
-    use HasFactory;
-    use SoftDeletes;
     public $fillable = array(
         "post_title", "post_slug", "post_description",
         "post_content", "post_coordinates", "post_type",
-        "post_author", "updated_by", "deleted_by", "deleted_at"
+        "post_author", "post_parent", "updated_by", "deleted_by", "deleted_at"
     );
 
-    public function topic()
-    {
+    protected static function booted() {
+        // Ajouter un scope global pour les attachments
+        static::addGlobalScope('attachment', function (Builder $query) {
+            $query->where('post_type', 'post');
+        });
+    }
+
+    public function parent() {
         return $this->belongsTo(Topic::class, "id");
     }
-    public function author() {
-        return $this->belongsTo(User::class, 'post_author');
+
+    public function attachments() {
+        return $this->hasMany(Attachment::class, "post_parent");
     }
 }

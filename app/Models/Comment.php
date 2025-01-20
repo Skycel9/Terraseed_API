@@ -2,19 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 
-class Comment extends Model
+class Comment extends Content
 {
-    protected $table = "posts";
-
-    use HasFactory;
-    use SoftDeletes;
-
     public $fillable = array(
         "post_content", "post_author", "post_type",
-        "is_published"
+        "post_parent", "is_published"
     );
+
+    protected static function booted() {
+        // Ajouter un scope global pour les attachments
+        static::addGlobalScope('attachment', function (Builder $query) {
+            $query->where('post_type', 'comment');
+        });
+    }
+
+    public function post() {
+        return $this->belongsTo(Post::class, 'post_parent');
+    }
 }
