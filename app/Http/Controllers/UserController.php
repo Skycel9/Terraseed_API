@@ -56,7 +56,7 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-        $this->authorize("create", User::class);
+//        $this->authorize("create", User::class);
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:25|unique:users,user_login',
